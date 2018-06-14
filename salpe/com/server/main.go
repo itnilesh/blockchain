@@ -4,9 +4,10 @@ import (
 	"log"
 	"net"
 
+	core "github.com/itnilesh/blockchain/salpe/com/core"
 	proto "github.com/itnilesh/blockchain/salpe/com/proto"
 	context "golang.org/x/net/context"
-	"google.golang.org/grpc"
+	grpc "google.golang.org/grpc"
 )
 
 func main() {
@@ -19,20 +20,29 @@ func main() {
 	log.Print("server started..")
 
 	srv := grpc.NewServer()
-	proto.RegisterBlockchainServer(srv, &Server{})
+	proto.RegisterBlockchainServer(srv, &Server{core.NewBlockChain()})
 	srv.Serve(listener)
 
 }
 
 // Server test
-type Server struct{}
+type Server struct {
+	Blockchain *core.BlockChain
+}
 
 // AddBlock test
-func (s *Server) AddBlock(context.Context, *proto.AddBlockRequest) (*proto.AddBlockResponse, error) {
-	return new(proto.AddBlockResponse), nil
+func (s *Server) AddBlock(ctx context.Context, in *proto.AddBlockRequest) (*proto.AddBlockResponse, error) {
+	newBLock := s.Blockchain.AddBlock(in.Data)
+	return &proto.AddBlockResponse{Hash: newBLock.Hash}, nil
 }
 
 // GetBlockChain test
-func (s *Server) GetBlockChain(context.Context, *proto.GetBlockChainRequest) (*proto.GetBlockChainResponse, error) {
-	return new(proto.GetBlockChainResponse), nil
+func (s *Server) GetBlockChain(ctx context.Context, out *proto.GetBlockChainRequest) (*proto.GetBlockChainResponse, error) {
+
+	resp := proto.GetBlockChainResponse{}
+	for _, b := range s.Blockchain.Blocks {
+		resp.Blocks = append(resp.Blocks, &proto.Block{Data: b.Data, Hash: b.Hash, PreviousHash: b.PrevBlockHash})
+
+	}
+	return &resp, nil
 }

@@ -28,5 +28,5 @@ message Block {
 
 }
 message GetBlockChainResponse{
- repeated Block block = 1; 
+ repeated Block blocks = 1; 
 }
